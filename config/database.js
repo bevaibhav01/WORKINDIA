@@ -141,12 +141,19 @@ res.cookie("token",token,options).status(200).json({
 const addPlaceHandler=async (req,res)=>{
   try{
     console.log("im here")
-  const {name,address,phone_no,website,open_time,close_time}=req.body;
-
-  if(!name||!phone_no||!website||!open_time||!close_time){
+  const {name,address,phone_no,website,open_time,close_time,unique_id}=req.body;
+  
+  if(!name||!phone_no||!website||!open_time||!close_time||!unique_id){
     res.status(404).json({
       success:false,
       message:"All fields are required"
+    })
+  }
+
+  if(unique_id!=process.env.ADMIN_SECRET){
+    res.status(400).json({
+      succes:false,
+      message:"Only for admin"
     })
   }
   
@@ -172,13 +179,39 @@ const addPlaceHandler=async (req,res)=>{
 }
 
   
+}
 
+const searchQuery=async (req,res)=>{
+  try{
+   const name=req.params.name;
+   console.log("iam running")
 
+   if(!name){
+    res.status(400).josn({
+      succes:false,
+      message:"required"
+    })
+   }
+   console.log("iam running")
+   const place = await promiseConnection.query(
+    "SELECT * FROM dining WHERE name=?",
+    [`%${name}%`]
+  );
 
+  console.log(place)
 
+  res.status(200).json({
+    succes:true,
+    data:place
+  })
+
+}catch(err){
+  console.log(err)
+}
 
 }
 module.exports=db;
 module.exports.signUpHandler=signUpHandler
 module.exports.loginHandler=loginHandler
 module.exports.addPlaceHandler=addPlaceHandler
+module.exports.searchQuery=searchQuery
